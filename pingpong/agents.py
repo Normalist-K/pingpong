@@ -11,6 +11,8 @@ class ThemeSelectionAgent:
             {"role": "user", "content": f"'{keyword}' 키워드를 활용해서 짧은 이야기를 만들거야. 이 이야기의 주제를 만들어줘. 주제에는 반드시 키워드를 포함해야해. 부연설명 없이 주제만 하나 생성해줘."}
         ]
         return generate_response(messages)
+    
+
 
 
 # 챗봇 에이전트
@@ -40,7 +42,7 @@ class HumanUser:
             input_prompt = f"{self.name}, 주제 '{theme}'에 대해 이야기를 이어갈 문장을 입력해주세요. 현재 이야기: {' '.join(previous_sentences)}\n입력: "
         return input(input_prompt)
 
-# 이미지 에이전트
+# 프롬프트 서머리 에이전트
 class SummaryAgent:
     def summarize_story(self, sentences: List[str]) -> str:
         messages = [
@@ -49,7 +51,7 @@ class SummaryAgent:
         ]
         return generate_response(messages)
     
-    
+# 이미지 에이전트
 class ImageAgent:
     def generate_thumbnail(self, summary_prompt):
         return generate_image(summary_prompt)

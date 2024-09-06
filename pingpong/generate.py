@@ -6,12 +6,13 @@ client = OpenAI()
 
 
 # OpenAI API를 통해 문장을 생성하는 함수
-def generate_response(prompt: str) -> str:
+def generate_response(prompt: str, model: str = "gpt-4o-mini") -> str:
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model=model,
         messages=prompt
     )
     return response.choices[0].message.content.strip()
+
 
 
 def generate_image(prompt: str):

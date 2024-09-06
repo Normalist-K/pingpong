@@ -2,10 +2,9 @@ import os
 import random
 from datetime import datetime
 from pprint import pprint
-from typing import List, Union
+from typing import List, Union, Optional
 
 from agents import ChatBotAgent, HumanUser, ThemeSelectionAgent, SummaryAgent, ImageAgent
-
 
 # 게임 클래스
 class StoryGame:
@@ -14,89 +13,98 @@ class StoryGame:
             participants: List[Union[ChatBotAgent, HumanUser]], 
             max_turns: int = 4, 
             termination_msg: str = "The End",
-            gen_img:bool = True
+            gen_img: bool = True,
+            gen_theme: bool = False,
         ):
         self.participants = participants
         self.max_turns = max_turns
         self.termination_msg = termination_msg
         self.gen_img = gen_img
-        self.sentences = []
+        self.gen_theme = gen_theme
+        self.sentences: List[str] = []
+        self.summary_prompt: Optional[str] = None
+        self.img: Optional[bytes] = None
         
         if self.gen_img:
             self.image_agent = ImageAgent()
 
-    def start_game(self, keyword: str):
-        # 1. 주제 선정
+    def start_game(self, keyword: str) -> None:
+        theme = self._generate_theme(keyword) if self.gen_theme else keyword
+        self._generate_first_sentence(theme)
+        self._generate_story(theme)
+        self._generate_summary()
+        if self.gen_img:
+            self._generate_image()
+        self._save_results()
+
+    def _generate_theme(self, keyword: str) -> str:
         theme_agent = ThemeSelectionAgent()
         theme = theme_agent.generate_theme(keyword)
-        print(f"Selected Theme: {theme}")
+        print(f"선택된 주제: {theme}")
+        return theme
 
-        # 2. 첫 문장 생성
+    def _generate_first_sentence(self, theme: str) -> None:
         first_participant = random.choice(self.participants)
         first_sentence = first_participant.generate_sentence(theme, [])
         self.sentences.append(first_sentence)
-        print(f"First Sentence: {first_sentence}")
+        print(f"첫 문장: {first_sentence}")
 
-        # 이미 턴을 마친 참가자를 저장할 리스트
-        participants_done = [first_participant]
-
-        # 3. 참여자들이 돌아가며 이야기 진행
-        turn = 0
-        while turn < self.max_turns:
+    def _generate_story(self, theme: str) -> None:
+        participants_done: List[Union[ChatBotAgent, HumanUser]] = []
+        
+        for turn in range(self.max_turns):
             if len(participants_done) == len(self.participants):
                 participants_done = []  # 모든 참가자가 턴을 완료하면 리스트 초기화
 
-            # 현재 턴에서 참가할 참가자 선택 (이미 턴을 마친 참가자는 제외)
-            remaining_participants = [p for p in self.participants if p not in participants_done]
-            current_participant = random.choice(remaining_participants)
-
-            # 문장 생성
+            current_participant = self._select_next_participant(participants_done)
             sentence = current_participant.generate_sentence(theme, self.sentences)
             self.sentences.append(sentence)
-            print(f"Turn {turn}: {sentence}")
+            print(f"턴 {turn}: {sentence}")
 
-            # 현재 참가자를 완료 리스트에 추가
             participants_done.append(current_participant)
 
-            # 종료 조건 체크
             if self.termination_msg in sentence:
                 break
 
-            turn += 1
+    def _select_next_participant(self, participants_done: List[Union[ChatBotAgent, HumanUser]]) -> Union[ChatBotAgent, HumanUser]:
+        remaining_participants = [p for p in self.participants if p not in participants_done]
+        return random.choice(remaining_participants)
 
-        # 4. 서머리 에이전트가 이야기를 바탕으로 이미지 생성 프롬프트를 작성
+    def _generate_summary(self) -> None:
         summary_agent = SummaryAgent()
         self.summary_prompt = summary_agent.summarize_story(self.sentences)
-        print("\nFinal Story:")
+        print("\n최종 이야기:")
         pprint(self.sentences)
-        print("\nSummary:")
+        print("\n요약:")
         pprint(self.summary_prompt)
 
-        # 5. 서머리 프롬프트를 바탕으로 이미지 생성
+    def _generate_image(self) -> None:
+        self.img = self.image_agent.generate_thumbnail(self.summary_prompt)
+
+    def _save_results(self) -> None:
+        save_dir = self._create_save_directory()
+        self._save_story(save_dir)
         if self.gen_img:
-            self.img = self.image_agent.generate_thumbnail(self.summary_prompt)
+            self._save_image(save_dir)
 
-        # 6. 결과 저장
-        self.save_results()
-
-    def save_results(self):
-        # 저장 디렉토리 설정
+    def _create_save_directory(self) -> str:
         now = datetime.now()
         save_dir = os.path.join("./results", now.strftime("%Y%m%d_%H%M%S"))
-        if not os.path.exists(save_dir):
-            os.makedirs(save_dir, exist_ok=True)
+        os.makedirs(save_dir, exist_ok=True)
+        return save_dir
 
-        # 이야기 저장
+    def _save_story(self, save_dir: str) -> None:
+        now = datetime.now()
         txt_path = os.path.join(save_dir, f'{now.strftime("%Y%m%d_%H%M%S")}.txt')
         with open(txt_path, 'w') as file:
             for line in self.sentences:
                 file.write(line + '\n')
             file.write(f'\n{self.summary_prompt}')
-        print(f"Story has been saved in {txt_path}")
+        print(f"이야기가 {txt_path}에 저장되었습니다.")
 
-        # 이미지 저장
-        if self.gen_img:
-            img_path = os.path.join(save_dir, f'{now.strftime("%Y%m%d_%H%M%S")}.jpg')
-            with open(img_path, 'wb') as file:
-                file.write(self.img.content)
-        print(f"Image has been saved in {img_path}")
+    def _save_image(self, save_dir: str) -> None:
+        now = datetime.now()
+        img_path = os.path.join(save_dir, f'{now.strftime("%Y%m%d_%H%M%S")}.jpg')
+        with open(img_path, 'wb') as file:
+            file.write(self.img.content)
+        print(f"이미지가 {img_path}에 저장되었습니다.")
