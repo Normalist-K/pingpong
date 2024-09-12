@@ -34,68 +34,68 @@ class PromptLoader:
         authors = self.prompts.get('author_styles', {})
         author = authors.get(author_name)
         if author:
-            prompt = f"""
-                특정 키워드가 제시될거에요. 
-                그러면 소설가 {author_name}의 문체로 사용하여 짧은 이야기의 첫 문장을 만들어주세요 \n 
-                문체: {author.get('style')}
-                """
+            prompt = (
+                "특정 키워드가 제시될거에요. "
+                f"그러면 소설가 {author_name}의 문체로 사용하여 짧은 이야기의 첫 문장을 만들어주세요 \n"
+                f"문체: {author.get('style')}"
+            )
         else:
-            prompt = f"""
-                특정 키워드가 제시될거에요. 
-                그러면 소설가 {author_name}의 문체로 사용하여 짧은 이야기의 첫 문장을 만들어주세요.
-                """
+            prompt = (
+                "특정 키워드가 제시될거에요. "
+                f"그러면 소설가 {author_name}의 문체로 사용하여 짧은 이야기의 첫 문장을 만들어주세요."
+            )
         return prompt
     
     def get_first_sentence_prompt_by_style(self, style_name: str):
         styles = self.prompts.get('writing_styles', {})
         style = styles.get(style_name)
         if style:
-            prompt = f"""
-                특정 키워드가 제시될거에요. 
-                그러면 아래 문체로 짧은 이야기의 첫 문장을 만들어주세요 \n 
-                [문체: {style.get('style')}]
-                """
+            prompt = (
+                "특정 키워드가 제시될거에요. "
+                "그러면 아래 문체로 짧은 이야기의 첫 문장을 만들어주세요 \n"
+                f"[문체: {style.get('style')}]"
+            )
         else:
-            prompt = """
-                특정 키워드가 제시될거에요. 
-                그러면 소설가의 문체로 짧은 이야기의 첫 문장을 만들어주세요.
-                """
+            prompt = (
+                "특정 키워드가 제시될거에요. "
+                "그러면 소설가의 문체로 짧은 이야기의 첫 문장을 만들어주세요."
+            )
         return prompt
         
     def get_author_style_prompt(self, author_name: str):
         authors = self.prompts.get('author_styles', {})
         author = authors.get(author_name)
         if author:
-            prompt =  f"""
-                특정 키워드가 제시될거에요. 
-                그러면 소설가 {author_name}의 문체로 사용하여 짧은 이야기를 만들거에요. 
-                이전 이야기를 참고해서 이어가주세요. \n 
-                문체: {author.get('style')}
-                """
+            prompt = (
+                "특정 키워드가 제시될거에요. "
+                f"그러면 소설가 {author_name}의 문체로 사용하여 짧은 이야기를 만들거에요. "
+                "이전 이야기를 참고해서 이어가주세요. \n"
+                f"문체: {author.get('style')}"
+            )
         else:
-            prompt = """
-                특정 키워드가 제시될거에요. 
-                그러면 소설가의 문체로 사용하여 짧은 이야기를 만들거에요. 
-                이전 이야기를 참고해서 이어가주세요.
-                """
+            prompt = (
+                "특정 키워드가 제시될거에요. "
+                "그러면 소설가의 문체로 사용하여 짧은 이야기를 만들거에요. "
+                "이전 이야기를 참고해서 이어가주세요."
+            )
         return prompt
     
     def get_writing_style_prompt(self, writing_style: str):
         styles = self.prompts.get('writing_styles', {})
         style = styles.get(writing_style)
         if style:
-            prompt = f"""
-                특정 키워드가 제시될거에요. 
-                그러면 아래 문체로 짧은 이야기를 만들거에요. \n 
-                이전 이야기를 참고해서 이어가주세요. \n 
-                [문체: {style.get('style')}]
-                """
+            prompt = (
+                "특정 키워드가 제시될거에요. "
+                "그러면 아래 문체로 짧은 이야기를 만들거에요. \n"
+                "이전 이야기를 참고해서 이어가주세요. \n"
+                f"[문체: {style.get('style')}]"
+            )
         else:
-            prompt = """
-                특정 키워드가 제시될거에요. 
-                그러면 소설 문체로 짧은 이야기를 만들거에요. \n 
-                이전 이야기를 참고해서 이어가주세요. \n 
-                """
+            prompt = (
+                "특정 키워드가 제시될거에요. "
+                "그러면 소설 문체로 짧은 이야기를 만들거에요. \n"
+                "이전 이야기를 참고해서 이어가주세요. \n"
+            )
         return prompt
 
 
@@ -108,10 +108,10 @@ class FirstSentenceAgent:
         writing_style_prompt = self.prompt_loader.get_first_sentence_prompt_by_style(writing_style)
         messages = [
             {"role": "system", "content": writing_style_prompt},
-            {"role": "user", "content": f"""
-                아래 키워드로 짧은 이야기의 첫 문장을 만들어줘.\n
-                [키워드: {keyword}]
-            """}
+            {"role": "user", "content": (
+                "아래 키워드로 짧은 이야기의 첫 문장을 만들어줘.\n"
+                f"[키워드: {keyword}]"
+            )}
         ]
         return generate_response(messages)
 
@@ -124,11 +124,11 @@ class ChatBotAgent:
         writing_style_prompt = self.prompt_loader.get_writing_style_prompt(writing_style)
         messages = [
             {"role": "system", "content": writing_style_prompt},
-            {"role": "user", "content": f"""
-                한 문장만 이용해서 다음의 이야기를 계속 이어가줘. 이전 이야기는 제외하고 새로 생성한 문장만 출력해. \n
-                [키워드: {keyword}] \n
-                [이전 이야기: {' '.join(previous_sentences)}]
-            """}
+            {"role": "user", "content": (
+                "한 문장만 이용해서 다음의 이야기를 계속 이어가줘. 이전 이야기는 제외하고 새로 생성한 문장만 출력해. \n"
+                f"[키워드: {keyword}] \n"
+                f"[이전 이야기: {' '.join(previous_sentences)}]"
+            )}
         ]
         return generate_response(messages)
 
@@ -149,7 +149,10 @@ class SummaryAgent:
     def summarize_story(self, sentences: List[str]) -> str:
         messages = [
             {"role": "system", "content": "너는 창의적이고 트렌디한 짧은 이야기 생성 assistant야"},
-            {"role": "user", "content": f"다음 이야기를 기반으로 이미지를 생성할거야. 트렌디한 이미지가 나오도록 프롬프트를 작성해줘. (이야기: {' '.join(sentences)}) 이 이야기는 다시 출력하지 않아도 돼."}
+            {"role": "user", "content": (
+                "다음 이야기를 기반으로 이미지를 생성할거야. 트렌디한 이미지가 나오도록 프롬프트를 작성해줘. "
+                f"(이야기: {' '.join(sentences)}) 이 이야기는 다시 출력하지 않아도 돼."
+            )}
         ]
         return generate_response(messages)
     

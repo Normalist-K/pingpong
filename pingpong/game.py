@@ -1,10 +1,13 @@
 import os
 import random
+import json
 from datetime import datetime
 from pprint import pprint
 from typing import List, Union, Optional
 
 from agents import ChatBotAgent, HumanUser, SummaryAgent, ImageAgent, FirstSentenceAgent
+from generate import get_api_call_logs, reset_api_call_logs
+from utils import get_commit_info
 
 # 게임 클래스
 class StoryGame:
@@ -27,13 +30,26 @@ class StoryGame:
         if self.gen_img:
             self.image_agent = ImageAgent()
 
+        self.log_data = {
+            "commit_info": get_commit_info(),
+            "game_info": {
+                "participants": [type(p).__name__ for p in participants],
+                "max_turns": max_turns,
+                "termination_msg": termination_msg,
+                "gen_img": gen_img,
+            },
+            "api_calls": [],
+        }
+
     def start_game(self, keyword: str, writing_style: str = None) -> None:
+        reset_api_call_logs()  # 게임 시작 시 API 호출 로그 초기화
         self._generate_first_sentence(keyword, writing_style)
         self._generate_story(keyword, writing_style)
         self._generate_summary()
         if self.gen_img:
             self._generate_image()
         self._save_results()
+        self._save_log()
 
     def _generate_first_sentence(self, keyword: str, writing_style: str) -> None:
         first_sentence = self.first_sentence_agent.generate_sentence(keyword, writing_style)
@@ -99,3 +115,10 @@ class StoryGame:
         with open(img_path, 'wb') as file:
             file.write(self.img.content)
         print(f"이미지가 {img_path}에 저장되었습니다.")
+
+    def _save_log(self):
+        self.log_data["api_calls"] = get_api_call_logs()
+        log_path = os.path.join(self._create_save_directory(), "game_log.json")
+        with open(log_path, 'w', encoding='utf-8') as f:
+            json.dump(self.log_data, f, ensure_ascii=False, indent=2)
+        print(f"로그가 {log_path}에 저장되었습니다.")

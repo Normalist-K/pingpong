@@ -39,7 +39,7 @@ def main():
 
     # 게임 인스턴스 생성 및 실행
     game = StoryGame(participants=participants, max_turns=args.max_turns, termination_msg=args.termination_msg, gen_img=args.gen_img)
-    game.start_game(keyword=args.keyword)
+    game.start_game(keyword=args.keyword, writing_style=args.writing_style)
 
 if __name__ == "__main__":
     main() 
