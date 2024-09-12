@@ -4,7 +4,7 @@ from datetime import datetime
 from pprint import pprint
 from typing import List, Union, Optional
 
-from agents import ChatBotAgent, HumanUser, ThemeSelectionAgent, SummaryAgent, ImageAgent
+from agents import ChatBotAgent, HumanUser, SummaryAgent, ImageAgent, FirstSentenceAgent
 
 # 게임 클래스
 class StoryGame:
@@ -14,42 +14,33 @@ class StoryGame:
             max_turns: int = 4, 
             termination_msg: str = "The End",
             gen_img: bool = True,
-            gen_theme: bool = False,
         ):
         self.participants = participants
         self.max_turns = max_turns
         self.termination_msg = termination_msg
         self.gen_img = gen_img
-        self.gen_theme = gen_theme
         self.sentences: List[str] = []
         self.summary_prompt: Optional[str] = None
         self.img: Optional[bytes] = None
-        
+        self.first_sentence_agent = FirstSentenceAgent()
+
         if self.gen_img:
             self.image_agent = ImageAgent()
 
-    def start_game(self, keyword: str) -> None:
-        theme = self._generate_theme(keyword) if self.gen_theme else keyword
-        self._generate_first_sentence(theme)
-        self._generate_story(theme)
+    def start_game(self, keyword: str, writing_style: str = None) -> None:
+        self._generate_first_sentence(keyword, writing_style)
+        self._generate_story(keyword, writing_style)
         self._generate_summary()
         if self.gen_img:
             self._generate_image()
         self._save_results()
 
-    def _generate_theme(self, keyword: str) -> str:
-        theme_agent = ThemeSelectionAgent()
-        theme = theme_agent.generate_theme(keyword)
-        print(f"선택된 주제: {theme}")
-        return theme
-
-    def _generate_first_sentence(self, theme: str) -> None:
-        first_participant = random.choice(self.participants)
-        first_sentence = first_participant.generate_sentence(theme, [])
+    def _generate_first_sentence(self, keyword: str, writing_style: str) -> None:
+        first_sentence = self.first_sentence_agent.generate_sentence(keyword, writing_style)
         self.sentences.append(first_sentence)
         print(f"첫 문장: {first_sentence}")
 
-    def _generate_story(self, theme: str) -> None:
+    def _generate_story(self, keyword: str, writing_style: str) -> None:
         participants_done: List[Union[ChatBotAgent, HumanUser]] = []
         
         for turn in range(self.max_turns):
@@ -57,7 +48,7 @@ class StoryGame:
                 participants_done = []  # 모든 참가자가 턴을 완료하면 리스트 초기화
 
             current_participant = self._select_next_participant(participants_done)
-            sentence = current_participant.generate_sentence(theme, self.sentences)
+            sentence = current_participant.generate_sentence(keyword, self.sentences, writing_style)
             self.sentences.append(sentence)
             print(f"턴 {turn}: {sentence}")
 

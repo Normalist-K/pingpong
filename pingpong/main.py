@@ -15,11 +15,12 @@ def parse_arguments():
     parser.add_argument("--max_turns", type=int, default=4, help="Maximum number of turns")
     parser.add_argument("--termination_msg", type=str, default="The End", help="Termination message")
     parser.add_argument("--keyword", type=str, default="Coca-Cola", help="Keyword for theme generation")
+    parser.add_argument("--writing_style", type=str, default="", help="Writing style for the agent")
     parser.add_argument("--gen_img", action='store_true', help="Whether to save the generated image")
 
     return parser.parse_args()
 
-# python pingpong/main.py --num_human 0 --num_chatbot 3 --max_turns 3 --keyword space --gen_img
+# python pingpong/main.py --num_human 0 --num_chatbot 6 --max_turns 6 --keyword "라면" --writing_style "유머러스한" --gen_img
 def main():
     # 인자 파싱
     args = parse_arguments()
