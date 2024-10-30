@@ -1,5 +1,6 @@
 import streamlit as st
 import logging
+import traceback
 from config.settings import LOG_CONFIG
 from views.login_page import login_page
 from views.main_page import main_page
@@ -38,5 +39,5 @@ if __name__ == "__main__":
     try:
         run_app()
     except Exception as e:
-        logging.error(f"Application error: {str(e)}")
+        logging.error(f"Application error: {str(e)}\n{traceback.format_exc()}")
         st.error("애플리케이션 오류가 발생했습니다")
