@@ -3,10 +3,17 @@ import json
 from datetime import datetime
 import logging
 import streamlit as st
-
+import pytz
 
 from utils.validators import sanitize_input, rate_limiter
 from data.storage import load_messages, save_messages
+
+def format_timestamp(timestamp_str):
+    """ISO 형식의 타임스탬프를 보기 좋은 형식으로 변환"""
+    timestamp = datetime.fromisoformat(timestamp_str)
+    kr_tz = pytz.timezone('Asia/Seoul')
+    kr_time = timestamp.astimezone(kr_tz)
+    return kr_time.strftime("%Y-%m-%d %H:%M")
 
 def chat_room():
     if not st.session_state['current_room'] or not st.session_state['current_user']:
@@ -16,62 +23,86 @@ def chat_room():
         return
 
     room = st.session_state['current_room']
+    user = st.session_state['current_user']
     
-    st.sidebar.title(f"채팅방: {room['name']}")
-    st.sidebar.subheader("사용자 선택")
-    user = st.sidebar.radio("사용자", room['users'], 
-                           index=room['users'].index(st.session_state['current_user']))
-    st.session_state['current_user'] = user
+    # 현재 유저가 채팅방 유저 목록에 없는 경우 유저 선택 화면으로 이동
+    if user not in room['users']:
+        st.error("채팅방 참여자가 아닙니다. 다시 선택해주세요.")
+        st.session_state['current_user'] = None
+        st.session_state['page'] = 'select_user'
+        st.rerun()
+        return
 
-    st.subheader(f"{room['name']} 채팅방")
-    message = st.text_input("메시지 입력", key="message_input")
+    # 사이드바 설정
+    with st.sidebar:
+        st.title(f"채팅방: {room['name']}")
+        st.subheader("참여자 목록")
+        for participant in room['users']:
+            with st.container():
+                col1, col2 = st.columns([1, 4])
+                with col1:
+                    st.write("👤")
+                with col2:
+                    if participant == user:
+                        st.write(f"**{participant} (나)**")
+                    else:
+                        st.write(participant)
+        
+        if st.button("메인으로 돌아가기", use_container_width=True):
+            st.session_state['page'] = 'main'
+            st.rerun()
+
+    # 메인 채팅 영역
+    st.header(f"{room['name']}")
+
+    # 채팅 메시지 표시
+    messages_container = st.container()
     
-    if st.button("전송"):
-        if not message:
-            st.warning("메시지를 입력하세요")
-            return
-
+    # 메시지 입력
+    message = st.chat_input("메시지를 입력하세요")
+    
+    if message:
         if not rate_limiter.can_proceed(user):
             st.warning("메시지 전송 속도가 너무 빠릅니다")
             return
 
-        message = sanitize_input(message)
-        if not message:
+        cleaned_message = sanitize_input(message)
+        if not cleaned_message:
             st.error("올바른 메시지를 입력하세요")
             return
 
         try:
             messages = load_messages(room['id'])
-            messages.append({
+            new_message = {
                 'user': user,
-                'message': message,
-                'timestamp': datetime.now().isoformat()
-            })
+                'message': cleaned_message,
+                'timestamp': datetime.now(pytz.UTC).isoformat()
+            }
+            messages.append(new_message)
             save_messages(room['id'], messages)
             logging.info(f"Message sent in room {room['id']} by {user}")
-            st.rerun()
-        except FileNotFoundError:
-            st.error("채팅방을 찾을 수 없습니다")
-        except PermissionError:
-            st.error("파일 접근 권한이 없습니다")
-        except json.JSONDecodeError:
-            st.error("메시지 데이터가 손상되었습니다")
         except Exception as e:
-            logging.error(f"Unexpected error: {str(e)}")
-            st.error("알 수 없는 오류가 발생했습니다")
+            logging.error(f"Error sending message: {str(e)}")
+            st.error("메시지 전송 중 오류가 발생했습니다")
+            return
 
-    st.subheader("채팅 기록")
-    try:
-        messages = load_messages(room['id'])
-        for msg in messages:
-            st.write(f"[{msg['timestamp']}] {msg['user']}: {msg['message']}")
-    except Exception as e:
-        logging.error(f"Error displaying messages: {str(e)}")
-        st.error("채팅 기록을 불러오는 중 오류가 발생했습니다")
+    # 메시지 표시
+    with messages_container:
+        try:
+            messages = load_messages(room['id'])
+            for msg in messages:
+                is_user = msg['user'] == user
+                with st.chat_message(name=msg['user'], avatar="🧑‍💻" if is_user else "👤"):
+                    col1, col2 = st.columns([4, 1])
+                    with col1:
+                        st.write(f"**{msg['user']}**")
+                    with col2:
+                        st.write(f"*{format_timestamp(msg['timestamp'])}*")
+                    st.write(msg['message'])
+        except Exception as e:
+            logging.error(f"Error displaying messages: {str(e)}")
+            st.error("채팅 기록을 불러오는 중 오류가 발생했습니다")
 
-    if st.button("메인 화면으로 돌아가기"):
-        st.session_state['page'] = 'main'
-        st.rerun()
-
+    # 자동 새로고침
     time.sleep(1)
     st.rerun()

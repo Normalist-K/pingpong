@@ -39,7 +39,7 @@ def create_chat_room():
             save_messages(room_id, [])
             
             st.session_state['current_room'] = new_room
-            st.session_state['page'] = 'chat_room'
+            st.session_state['page'] = 'select_user'
             logging.info(f"New room created: {room_id}")
             st.rerun()
         except Exception as e:

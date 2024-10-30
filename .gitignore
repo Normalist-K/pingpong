@@ -1,3 +1,6 @@
+pinpong_streamlit/.streamlit/secrets.toml
+pinpong_streamlit/secure_chat_data/
+chat_app.log
 results
 
 # Byte-compiled / optimized / DLL files
