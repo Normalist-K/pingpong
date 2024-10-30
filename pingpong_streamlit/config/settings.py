@@ -12,8 +12,8 @@ LOG_CONFIG = {
 }
 
 # 데이터 저장 경로 설정
-if os.getenv('STREAMLIT_CLOUD'):
-    DATA_DIR = Path(tempfile.gettempdir()) / "secure_chat_data"
-else:
-    DATA_DIR = Path(st.secrets["app"]["data_dir"])
-ROOMS_FILE = DATA_DIR / "rooms.json"
+# if os.getenv('STREAMLIT_CLOUD'):
+#     DATA_DIR = Path(tempfile.gettempdir()) / "secure_chat_data"
+# else:
+#     DATA_DIR = Path(st.secrets["app"]["data_dir"])
+# ROOMS_FILE = DATA_DIR / "rooms.json"
