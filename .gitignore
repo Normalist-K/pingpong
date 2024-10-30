@@ -1,4 +1,4 @@
-pinpong_streamlit/secure_chat_data/
+pingpong_streamlit/secure_chat_data/
 chat_app.log
 secrets.toml
 results
