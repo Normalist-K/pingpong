@@ -12,6 +12,9 @@ def create_chat_room():
         user_names = st.text_area("참여자 이름 (쉼표로 구분)", 
                                 placeholder="예: Alice, Bob, Charlie")
         submit_button = st.form_submit_button(label="채팅방 생성")
+    if st.button("메인으로 돌아가기"):
+        st.session_state['page'] = 'main'
+        st.rerun()
     
     if submit_button:
         room_name = sanitize_input(room_name, max_length=10)

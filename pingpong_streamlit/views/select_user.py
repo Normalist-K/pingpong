@@ -25,3 +25,7 @@ def select_user_page():
             st.session_state['page'] = 'chat_room'
             logging.info(f"User {user} selected for room: {room['id']}")
             st.rerun()
+            
+        if st.button("메인으로 돌아가기"):
+            st.session_state['page'] = 'main'
+            st.rerun()
