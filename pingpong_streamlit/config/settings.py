@@ -1,3 +1,4 @@
+import logging
 import streamlit as st
 from pathlib import Path
 import os
@@ -5,9 +6,9 @@ import tempfile
 
 # 로깅 설정
 LOG_CONFIG = {
-    'filename': st.secrets["app"]["log_file"],
     'level': 'INFO',
-    'format': '%(asctime)s - %(levelname)s - %(message)s'
+    'format': '%(asctime)s - %(levelname)s - %(message)s',
+    'handlers': [logging.StreamHandler()]
 }
 
 # 데이터 저장 경로 설정
