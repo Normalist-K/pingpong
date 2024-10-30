@@ -4,6 +4,9 @@ from config.settings import ROOMS_FILE, DATA_DIR
 from utils.validators import secure_file_path
 import shutil
 from datetime import datetime
+import requests
+import os
+import streamlit as st
 
 
 def load_rooms():
@@ -42,12 +45,18 @@ def load_messages(room_id):
 def save_messages(room_id, messages):
     """특정 채팅방의 메시지를 파일에 저장"""
     try:
+        # 로컬 저장
         file_path = secure_file_path(room_id)
         with open(file_path, 'w') as f:
             json.dump(messages, f, indent=2)
+            
+        # Gist 백업 (클라우드 환경일 때만)
+        if os.getenv('STREAMLIT_CLOUD'):
+            backup_to_gist(room_id, messages)
+            
         logging.info(f"Messages saved for room {room_id}")
     except Exception as e:
-        logging.error(f"Error saving messages for room {room_id}: {str(e)}")
+        logging.error(f"Error saving messages: {str(e)}")
         raise
 
 def delete_room(room_id):
@@ -85,4 +94,36 @@ def delete_room(room_id):
             
     except Exception as e:
         logging.error(f"Error deleting room {room_id}: {str(e)}")
+        raise
+
+def backup_to_gist(room_id, messages):
+    """채팅 기록을 GitHub Gist에 백업"""
+    try:
+        gist_token = st.secrets["github"]["gist_token"]
+        headers = {
+            'Authorization': f'token {gist_token}',
+            'Accept': 'application/vnd.github.v3+json'
+        }
+        
+        data = {
+            "description": f"Chat backup for room {room_id}",
+            "public": False,
+            "files": {
+                f"chat_{room_id}.json": {
+                    "content": json.dumps(messages, indent=2)
+                }
+            }
+        }
+        
+        response = requests.post(
+            'https://api.github.com/gists',
+            headers=headers,
+            json=data
+        )
+        response.raise_for_status()
+        
+        return response.json()["id"]
+        
+    except Exception as e:
+        logging.error(f"Error backing up to Gist: {str(e)}")
         raise
