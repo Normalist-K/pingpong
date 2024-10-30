@@ -1,5 +1,4 @@
 import time
-import json
 from datetime import datetime
 import logging
 import streamlit as st

@@ -13,7 +13,7 @@ def check_password():
             logging.info("Successful login attempt")
         else:
             if pwd:
-                logging.warning(f"Failed login attempt")
+                logging.warning("Failed login attempt")
             st.error("잘못된 비밀번호입니다.")
             return False
     return True

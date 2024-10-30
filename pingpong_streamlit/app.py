@@ -1,6 +1,6 @@
 import streamlit as st
 import logging
-from config.settings import LOG_CONFIG, DATA_DIR
+from config.settings import LOG_CONFIG
 from views.login_page import login_page
 from views.main_page import main_page
 from views.chat_room import chat_room
@@ -9,9 +9,6 @@ from views.select_user import select_user_page
 
 # 로깅 설정
 logging.basicConfig(**LOG_CONFIG)
-
-# 데이터 디렉토리 생성
-DATA_DIR.mkdir(mode=0o700, exist_ok=True)
 
 # 세션 상태 초기화
 if "password_correct" not in st.session_state:

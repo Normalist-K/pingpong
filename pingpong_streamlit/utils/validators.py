@@ -1,9 +1,5 @@
 import re
-import logging
 from datetime import datetime, timedelta
-
-from config.settings import DATA_DIR
-
 
 
 class RateLimiter:
@@ -31,10 +27,3 @@ def sanitize_input(text, max_length=1000):
     if re.search(r'[<>{}[\]\\]', text):
         return None
     return text
-
-def secure_file_path(room_id):
-    """파일 경로 검증"""
-    if not isinstance(room_id, str) or not room_id.isalnum():
-        logging.error(f"Invalid room ID attempted: {room_id}")
-        raise ValueError("Invalid room ID")
-    return DATA_DIR / f"messages_{room_id}.json"

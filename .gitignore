@@ -1,6 +1,9 @@
 pingpong_streamlit/secure_chat_data/
 chat_app.log
+.streamlit/secrets.toml
 secrets.toml
+*.pyc
+.env
 results
 
 # Byte-compiled / optimized / DLL files

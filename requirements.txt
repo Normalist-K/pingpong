@@ -1,2 +1,5 @@
 openai
 pytest
+streamlit>=1.31.0
+pytz
+requests
